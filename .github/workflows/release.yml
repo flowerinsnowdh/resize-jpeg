@@ -1,0 +1,59 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+
+  build-gnu-linux:
+    name: Release - GNU/Linux
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.0'
+
+      - name: Build
+        run: |
+          go build
+          chmod +x resize-jpeg
+          tar -zcvf resize-jpeg-linux.tar.gz resize-jpeg LICENSE NOTICE
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: resize-jpeg-linux.tar.gz
+
+  build-windows:
+    name: Release - Windows
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.0'
+
+      - name: Build
+        run: |
+          go build
+          powershell -command "Compress-Archive -Path 'resize-jpeg.exe', 'LICENSE', 'NOTICE' -DestinationPath 'resize-jpeg-windows.zip'"
+
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: resize-jpeg-windows.zip
